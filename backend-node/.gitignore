@@ -1,0 +1,6 @@
+node_modules/
+*.traineddata
+*.jpg
+*.png
+test-ocr.js
+.env
