@@ -1,0 +1,7 @@
+node_modules/
+package-lock.json
+*.traineddata
+*.jpg
+*.png
+test-ocr.js
+.env
