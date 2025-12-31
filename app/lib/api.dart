@@ -1,41 +1,68 @@
+import 'dart:convert';
 import 'dart:io';
+
 import 'package:http/http.dart' as http;
+import 'package:http_parser/http_parser.dart';
+import 'package:mime/mime.dart';
 
 class OcrApi {
-  static const baseUrl = 'https://YOUR_BACKEND_URL';
+  static const String baseUrl = 'http://192.168.1.53:3000';
+  static final http.Client _client = http.Client();
 
   static Future<String> upload(File image) async {
-    try {
-      final req = http.MultipartRequest(
-        'POST',
-        Uri.parse('$baseUrl/ocr/upload'),
-      );
-      req.files.add(await http.MultipartFile.fromPath('file', image.path));
-      await req.send();
-      // return jsonDecode(body)['job_id'];
-    } catch (e) {
-      print(e);
+    final mimeType = lookupMimeType(image.path) ?? 'application/octet-stream';
+
+    final parts = mimeType.split('/');
+    final mediaType = parts.length == 2
+        ? MediaType(parts[0], parts[1])
+        : MediaType('application', 'octet-stream');
+
+    final request = http.MultipartRequest(
+      'POST',
+      Uri.parse('$baseUrl/api/upload'),
+    );
+
+    request.files.add(
+      await http.MultipartFile.fromPath(
+        'image',
+        image.path,
+        contentType: mediaType,
+      ),
+    );
+
+    final streamedResponse = await _client.send(request);
+    final response = await http.Response.fromStream(streamedResponse);
+
+    if (response.statusCode != 200) {
+      throw Exception(response.body);
     }
-    return "ijdflk";
+
+    return jsonDecode(response.body)['jobId'];
   }
 
   static Future<String> status(String jobId) async {
     try {
-      await http.get(Uri.parse('$baseUrl/ocr/status/$jobId'));
-      // return jsonDecode(res.body)['status'];
+      final response = await _client
+          .get(Uri.parse('$baseUrl/api/status/$jobId'))
+          .timeout(const Duration(seconds: 10));
+
+      return jsonDecode(response.body)['status'];
     } catch (e) {
       print(e);
+      return "COMPLETED";
     }
-    return "COMPLETED";
   }
 
   static Future<String> result(String jobId) async {
     try {
-      await http.get(Uri.parse('$baseUrl/ocr/result/$jobId'));
-      // return jsonDecode(res.body)['text'];
+      final response = await _client
+          .get(Uri.parse('$baseUrl/api/result/$jobId'))
+          .timeout(const Duration(seconds: 10));
+
+      return jsonDecode(response.body)['text'];
     } catch (e) {
       print(e);
+      return "";
     }
-    return '''"dummy ocr"''';
   }
 }

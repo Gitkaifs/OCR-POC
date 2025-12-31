@@ -1,9 +1,18 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'home_screen.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
-  runApp(const MyApp());
+  runApp(
+    AnnotatedRegion<SystemUiOverlayStyle>(
+      value: const SystemUiOverlayStyle(
+        statusBarColor: Colors.transparent,
+        statusBarIconBrightness: Brightness.light,
+      ),
+      child: const MyApp(),
+    ),
+  );
 }
 
 class MyApp extends StatelessWidget {
@@ -14,8 +23,9 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'OCR App',
       theme: ThemeData(useMaterial3: true),
-      themeMode: ThemeMode.light,
+      themeMode: ThemeMode.dark,
       home: const HomeScreen(),
+      debugShowCheckedModeBanner: false,
     );
   }
 }

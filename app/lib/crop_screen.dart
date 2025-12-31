@@ -71,8 +71,8 @@ class _CropScreenState extends State<CropScreen> {
     setState(() => _status = 'Processing text…');
     for (int i = 0; i < 20; i++) {
       final s = await OcrApi.status(jobId);
-      if (s == 'COMPLETED') break;
-      if (s == 'FAILED') {
+      if (s == 'done') break;
+      if (s == 'rejected') {
         throw Exception('OCR failed');
       }
       await Future.delayed(const Duration(seconds: 3));
