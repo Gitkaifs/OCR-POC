@@ -7,7 +7,7 @@ import 'package:http_parser/http_parser.dart';
 import 'package:mime/mime.dart';
 
 class OcrApi {
-  static const String baseUrl = 'http://192.168.1.53:3000/api';
+  static const String baseUrl = 'http://192.168.1.53:4000/api';
   static final http.Client _client = http.Client();
 
   static Future<void> upload(File image) async {

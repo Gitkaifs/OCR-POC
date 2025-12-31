@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:app/api.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'models.dart';
@@ -43,10 +44,13 @@ class DocumentDetails extends StatelessWidget {
                       ),
                       child: ClipRRect(
                         borderRadius: BorderRadius.circular(24),
-                        child: Image.file(
-                          File(doc.imageUrl),
-                          width: double.infinity,
+                        child: Image.network(
+                          OcrApi.getImgUrl(doc.imageUrl),
                           fit: BoxFit.cover,
+                          errorBuilder: (context, error, stackTrace) {
+                            // to-do (shimmer)
+                            return CircularProgressIndicator();
+                          },
                         ),
                       ),
                     ),

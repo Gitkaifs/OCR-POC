@@ -5,7 +5,7 @@ class Document {
   Document({required this.imageUrl, required this.text});
 
   static Document fromMap(Map<String, dynamic> map) => Document(
-    imageUrl: map['docImage'].toString(),
-    text: map['docText'].toString(),
+    imageUrl: map['imagePath'].toString(),
+    text: map['extractedText'].toString(),
   );
 }
