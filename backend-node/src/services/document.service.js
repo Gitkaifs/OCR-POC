@@ -1,5 +1,5 @@
 import Document from '../models/document.model.js';
-import DocumentContent from '../models/documentContent.model.js';
+// import DocumentContent from '../models/documentContent.model.js';
 import {processOCR} from './Ocr.service.js';
 
 /**
@@ -59,7 +59,7 @@ export const processDocument = async ({
  */
 export const getAllDocuments = async () => {
   return Document.find()
-    .select('status extractedText createdAt')
+    .select('imagePath extractedText createdAt')
     .sort({ createdAt: -1 });
 };
 

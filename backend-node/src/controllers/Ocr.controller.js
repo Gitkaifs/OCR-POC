@@ -2,13 +2,13 @@ import { v4 as uuidv4 } from 'uuid';
 import { createJob, getJob, updateJobStatus, jobExists } from '../utils/jobStore.js';
 import { processOCR } from '../services/ocr.service.js';
 import { imgUrlConverter } from '../utils/helpingFunctions.js';
-import { saveDocument } from '../services/document.service.js';
+import { saveDocument , getAllDocuments } from '../services/document.service.js';
 
 // ------------------------------
 // Temporary helper functions
 
 let extractedText ;
-const database = [];
+// const database = [];
 let imagePath ;
 
 
@@ -45,15 +45,15 @@ export const uploadImage = async (req, res) => {
     // -----------------------------------------
     // kaif add image , text add to db here and retrun promise add await before it.
     //-----------------------------------------
-    saveDocument()
+    await saveDocument(imgUrlConverter(imagePath) , extractedText);
     // -----------------------
     // Temporary helper function to mimic database work
 
-    database.push({
-      textid : Date.now ,
-      docText : extractedText ,
-      docImage : imgUrlConverter(imagePath)
-    })
+    // database.push({
+    //   textid : Date.now ,
+    //   docText : extractedText ,
+    //   docImage : imgUrlConverter(imagePath)
+    // })
 
     //-------------------------------------
 
@@ -178,7 +178,8 @@ const processImageAsync = async (jobId, imagePath) => {
 export const getAll = async (req , res) => {
   try{
     // const data = await FetctAllData(); // This should return all data in ary of obj.
-
+    let database = await getAllDocuments();
+    console.log(database)
 
     res.status(200).json({
       allData : database , 
@@ -189,7 +190,7 @@ export const getAll = async (req , res) => {
   catch(err){
     res.status(404).json({
       message : "Data not found.",
-      errorMsg : err
+      errorMsg : err.message
     })
 
   }
