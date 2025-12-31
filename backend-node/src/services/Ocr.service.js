@@ -1,11 +1,6 @@
-/**
- * OCR Processing Service
- * 
- * This module will be implemented by your colleague.
- * It should accept an image file path and return extracted text.
- * 
- * For now, this is a mock implementation for testing purposes.
- */
+
+const Tesseract = require("tesseract.js");
+const fs = require("fs").promises;
 
 /**
  * Process image and extract text
@@ -13,18 +8,22 @@
  * @returns {Promise<string>} - Extracted text from the image
  */
 export const processOCR = async (imagePath) => {
-  // Simulate OCR processing time
-  await new Promise(resolve => setTimeout(resolve, 3000));
-  
-  // Mock implementation - your colleague will replace this with actual OCR logic
-  // Example: using Tesseract.js, Google Vision API, etc.
-  
-  // For testing: return mock text
-  return "This is mock extracted text. Your colleague will implement actual OCR logic here.";
-  
-  // Actual implementation should:
-  // 1. Read the image from imagePath
-  // 2. Process it with an OCR library
-  // 3. Return the extracted text
-  // 4. Throw an error if image is unreadable
+  try {
+    await fs.access(imagePath);
+
+    const result = await Tesseract.recognize(
+      imagePath,
+      "eng",
+      {
+        logger: () => {}, // disable logs
+        tessedit_pageseg_mode: 6,
+        preserve_interword_spaces: 1
+      }
+    );
+
+    return result.data.text; // Return the extracted text
+  } catch (error) {
+    console.error("OCR Error:", error.message);
+    throw new Error("OCR_FAILED");
+  }
 };
