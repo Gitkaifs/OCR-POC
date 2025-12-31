@@ -1,6 +1,12 @@
 import app from './app.js';
+import { initiateDB } from './db/index.js';
+import dotenv from 'dotenv'
+
+dotenv.config();
 
 const PORT = process.env.PORT || 3000;
+
+initiateDB()
 
 app.listen(PORT, () => {
   console.log(`🚀 OCR POC Backend running on port ${PORT}`);
