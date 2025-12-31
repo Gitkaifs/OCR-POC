@@ -1,8 +1,12 @@
 node_modules/
 
-package-lock.json
-
 uploads/*
 !uploads/.gitkeep
 
 
+package-lock.json
+*.traineddata
+*.jpg
+*.png
+test-ocr.js
+.env
