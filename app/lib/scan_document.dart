@@ -23,12 +23,7 @@ class _ScanDocumentScreenState extends State<ScanDocumentScreen> {
   @override
   void initState() {
     super.initState();
-    try {
-      _scan();
-    } catch (e) {
-      setState(() => _status = "Failed, ${e.toString()}");
-      Timer(Duration(milliseconds: 100), () => _goHome());
-    }
+    _scan();
   }
 
   Future<void> _scan() async {
@@ -42,15 +37,8 @@ class _ScanDocumentScreenState extends State<ScanDocumentScreen> {
       }
       imageFile = File(scannedImages.first);
 
-      setState(() => _status = 'Saving image…');
-
-      final dir = await getApplicationDocumentsDirectory();
-      final savedImage = await imageFile!.copy(
-        '${dir.path}/${const Uuid().v4()}.jpg',
-      );
-
       setState(() => _status = 'Uploading for OCR…');
-      await OcrApi.upload(savedImage);
+      await OcrApi.upload(imageFile!);
 
       if (!mounted) return;
       setState(() => _status = 'Almost done');
@@ -63,7 +51,8 @@ class _ScanDocumentScreenState extends State<ScanDocumentScreen> {
         ),
       );
     } catch (e) {
-      _goHome();
+      setState(() => _status = "Failed, ${e.toString()}");
+      Timer(Duration(milliseconds: 100), () => _goHome());
     }
   }
 
