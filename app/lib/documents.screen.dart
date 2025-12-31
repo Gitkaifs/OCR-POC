@@ -1,7 +1,6 @@
-import 'dart:io';
+import 'package:app/api.dart';
 import 'package:app/home_screen.dart';
 import 'package:flutter/material.dart';
-import 'db.dart';
 import 'document_details.dart';
 import 'models.dart';
 
@@ -52,7 +51,7 @@ class DocumentsScreen extends StatelessWidget {
 
               Expanded(
                 child: FutureBuilder<List<Document>>(
-                  future: AppDatabase.getAll(),
+                  future: OcrApi.getAll(),
                   builder: (context, snapshot) {
                     if (!snapshot.hasData) {
                       return const Center(
@@ -116,11 +115,15 @@ class _DocumentCard extends StatelessWidget {
               borderRadius: const BorderRadius.horizontal(
                 left: Radius.circular(20),
               ),
-              child: Image.file(
-                File(doc.imagePath),
+              child: Image.network(
+                OcrApi.getImgUrl(doc.imageUrl),
                 width: 90,
                 height: 100,
                 fit: BoxFit.cover,
+                errorBuilder: (context, error, stackTrace) {
+                  // to-do (shimmer)
+                  return CircularProgressIndicator();
+                },
               ),
             ),
 
@@ -132,17 +135,12 @@ class _DocumentCard extends StatelessWidget {
                   children: [
                     Text(
                       doc.text,
-                      maxLines: 2,
+                      maxLines: 3,
                       overflow: TextOverflow.ellipsis,
                       style: const TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.w500,
                       ),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      _formatDate(doc.createdAt),
-                      style: const TextStyle(fontSize: 12, color: Colors.grey),
                     ),
                   ],
                 ),
@@ -163,10 +161,10 @@ class _DocumentCard extends StatelessWidget {
     );
   }
 
-  String _formatDate(String iso) {
-    final d = DateTime.parse(iso);
-    return '${d.day}/${d.month}/${d.year}';
-  }
+  // String _formatDate(String iso) {
+  //   final d = DateTime.parse(iso);
+  //   return '${d.day}/${d.month}/${d.year}';
+  // }
 }
 
 class _EmptyState extends StatelessWidget {

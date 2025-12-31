@@ -44,7 +44,7 @@ class DocumentDetails extends StatelessWidget {
                       child: ClipRRect(
                         borderRadius: BorderRadius.circular(24),
                         child: Image.file(
-                          File(doc.imagePath),
+                          File(doc.imageUrl),
                           width: double.infinity,
                           fit: BoxFit.cover,
                         ),

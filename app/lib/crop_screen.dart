@@ -1,13 +1,12 @@
+import 'dart:async';
 import 'dart:io';
 import 'package:app/documents.screen.dart';
+import 'package:app/home_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:image_cropper/image_cropper.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:uuid/uuid.dart';
-
 import 'api.dart';
-import 'db.dart';
-import 'models.dart';
 
 class CropScreen extends StatefulWidget {
   final String imagePath;
@@ -27,7 +26,18 @@ class _CropScreenState extends State<CropScreen> {
     super.initState();
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      _openCropper();
+      try {
+        _openCropper();
+      } catch (e) {
+        setState(() => _status = "Failed, ${e.toString()}");
+        Timer(
+          Duration(milliseconds: 100),
+          () => Navigator.of(context).pushAndRemoveUntil(
+            MaterialPageRoute(builder: (context) => HomeScreen()),
+            (route) => false,
+          ),
+        );
+      }
     });
   }
 
@@ -48,6 +58,7 @@ class _CropScreenState extends State<CropScreen> {
     );
 
     if (cropped == null || !mounted) {
+      // ignore: use_build_context_synchronously
       Navigator.pop(context);
       return;
     }
@@ -66,35 +77,16 @@ class _CropScreenState extends State<CropScreen> {
     setState(() => _finalImage = savedImage);
 
     setState(() => _status = 'Uploading for OCR…');
-    final jobId = await OcrApi.upload(savedImage);
-
-    setState(() => _status = 'Processing text…');
-    for (int i = 0; i < 20; i++) {
-      final s = await OcrApi.status(jobId);
-      if (s == 'done') break;
-      if (s == 'rejected') {
-        throw Exception('OCR failed');
-      }
-      await Future.delayed(const Duration(seconds: 3));
-    }
-
-    setState(() => _status = 'Finalizing…');
-    final text = await OcrApi.result(jobId);
-
-    await AppDatabase.insert(
-      Document(
-        imagePath: savedImage.path,
-        text: text,
-        createdAt: DateTime.now().toIso8601String(),
-      ),
-    );
+    await OcrApi.upload(savedImage);
 
     if (!mounted) return;
-
-    Navigator.pushAndRemoveUntil(
-      context,
-      MaterialPageRoute(builder: (_) => const DocumentsScreen()),
-      (_) => false,
+    setState(() => _status = "Almost, done");
+    Timer(
+      Duration(milliseconds: 100),
+      () => Navigator.of(context).pushAndRemoveUntil(
+        MaterialPageRoute(builder: (context) => DocumentsScreen()),
+        (route) => false,
+      ),
     );
   }
 
@@ -149,6 +141,7 @@ class _CropScreenState extends State<CropScreen> {
                     child: ClipRRect(
                       borderRadius: BorderRadius.circular(24),
                       child: _finalImage == null
+                          // to-do (shimmer effect for image).
                           ? const Center(child: CircularProgressIndicator())
                           : Image.file(
                               _finalImage!,
@@ -165,6 +158,8 @@ class _CropScreenState extends State<CropScreen> {
               Text(
                 _status,
                 style: const TextStyle(color: Colors.white70, fontSize: 15),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
               ),
 
               const SizedBox(height: 16),
