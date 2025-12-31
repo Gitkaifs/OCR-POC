@@ -1,0 +1,12 @@
+node_modules/
+
+uploads/*
+!uploads/.gitkeep
+
+
+package-lock.json
+*.traineddata
+*.jpg
+*.png
+test-ocr.js
+.env
