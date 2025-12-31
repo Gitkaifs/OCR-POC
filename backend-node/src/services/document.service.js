@@ -1,6 +1,6 @@
 import Document from '../models/document.model.js';
 import DocumentContent from '../models/documentContent.model.js';
-import processOCR from './Ocr.service.js';
+import {processOCR} from './Ocr.service.js';
 
 /**
  * Main OCR flow
