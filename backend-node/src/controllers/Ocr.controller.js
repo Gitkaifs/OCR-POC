@@ -1,6 +1,18 @@
 import { v4 as uuidv4 } from 'uuid';
 import { createJob, getJob, updateJobStatus, jobExists } from '../utils/jobStore.js';
 import { processOCR } from '../services/ocr.service.js';
+import { imgUrlConverter } from '../utils/helpingFunctions.js';
+
+// ------------------------------
+// Temporary helper functions
+
+let extractedText ;
+const database = [];
+let imagePath ;
+
+
+
+// --------------------------------
 
 /**
  * API 1: Upload Image (Create OCR Job)
@@ -15,19 +27,39 @@ export const uploadImage = async (req, res) => {
       });
     }
 
-    // Generate unique job ID
-    const jobId = uuidv4();
+    // // Generate unique job ID
+    // const jobId = uuidv4();
 
-    // Create job in store with pending status
-    createJob(jobId);
+    // // Create job in store with pending status
+    // createJob(jobId);
 
-    // Start OCR processing asynchronously (don't wait for it)
-    processImageAsync(jobId, req.file.path);
+    // // Start OCR processing asynchronously (don't wait for it)
+    // processImageAsync(jobId, req.file.path);
+
+    // const extractedText = await processOCR(imagePath); // Uncomment later -uncom
+    imagePath = req.file.path ;
+    extractedText = await processOCR(imagePath);
+    
+
+    // -----------------------------------------
+    // kaif add image , text add to db here and retrun promise add await before it.
+    //-----------------------------------------
+
+    // -----------------------
+    // Temporary helper function to mimic database work
+
+    database.push({
+      textid : Date.now ,
+      docText : extractedText ,
+      docImage : imgUrlConverter(imagePath)
+    })
+
+    //-------------------------------------
 
     // Return job ID immediately
     return res.status(200).json({
-      jobId,
-      message: 'Image uploaded successfully'
+      // jobId,
+      message: 'Image uploaded successfully.'
     });
 
   } catch (error) {
@@ -140,3 +172,24 @@ const processImageAsync = async (jobId, imagePath) => {
     });
   }
 };
+
+
+export const getAll = async (req , res) => {
+  try{
+    // const data = await FetctAllData(); // This should return all data in ary of obj.
+
+
+    res.status(200).json({
+      allData : database , 
+      message : "All data fetched from DB."
+    })
+
+  }
+  catch(err){
+    res.status(404).json({
+      message : "Data not found.",
+      errorMsg : err
+    })
+
+  }
+}

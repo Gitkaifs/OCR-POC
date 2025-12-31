@@ -1,6 +1,6 @@
 import express from 'express';
 import { upload } from '../middlewares/multer.middleware.js';
-import { uploadImage, getStatus, getResult } from '../controllers/ocr.controller.js';
+import { uploadImage, getStatus, getResult , getAll } from '../controllers/ocr.controller.js';
 
 const router = express.Router();
 
@@ -21,5 +21,11 @@ router.get('/status/:jobId', getStatus);
  * GET /api/result/:jobId
  */
 router.get('/result/:jobId', getResult);
+
+/**
+ * API 4: Get all documents from database and give back to user
+ * GET /api/alltext
+ */
+router.get('/getall' , getAll);
 
 export default router;

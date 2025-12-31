@@ -4,6 +4,10 @@ import ocrRoutes from './routes/ocr.routes.js';
 
 const app = express();
 
+// Static
+app.use("/api/uploads", express.static("uploads"));
+
+
 // Middleware
 app.use(cors()); // Enable CORS for Flutter frontend
 app.use(express.json());
