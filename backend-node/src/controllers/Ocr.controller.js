@@ -4,11 +4,9 @@ import { processOCR } from '../services/Ocr.service.js';
 import { imgUrlConverter } from '../utils/helpingFunctions.js';
 import { saveDocument , getAllDocuments } from '../services/document.service.js';
 
-// ------------------------------
-// Temporary helper functions
+// ----------------------------
 
 let extractedText ;
-// const database = [];
 let imagePath ;
 
 
@@ -28,38 +26,19 @@ export const uploadImage = async (req, res) => {
       });
     }
 
-    // // Generate unique job ID
-    // const jobId = uuidv4();
-
-    // // Create job in store with pending status
-    // createJob(jobId);
-
-    // // Start OCR processing asynchronously (don't wait for it)
-    // processImageAsync(jobId, req.file.path);
-
-    // const extractedText = await processOCR(imagePath); // Uncomment later -uncom
+ 
     imagePath = req.file.path ;
+
+    // Extracting text using OCR funtion
     extractedText = await processOCR(imagePath);
     
 
-    // -----------------------------------------
-    // kaif add image , text add to db here and retrun promise add await before it.
-    //-----------------------------------------
+    // Save data in database.
     await saveDocument(imgUrlConverter(imagePath) , extractedText);
-    // -----------------------
-    // Temporary helper function to mimic database work
+ 
 
-    // database.push({
-    //   textid : Date.now ,
-    //   docText : extractedText ,
-    //   docImage : imgUrlConverter(imagePath)
-    // })
-
-    //-------------------------------------
-
-    // Return job ID immediately
     return res.status(200).json({
-      // jobId,
+  
       message: 'Image uploaded successfully.'
     });
 
@@ -177,7 +156,7 @@ const processImageAsync = async (jobId, imagePath) => {
 
 export const getAll = async (req , res) => {
   try{
-    // const data = await FetctAllData(); // This should return all data in ary of obj.
+ 
     let database = await getAllDocuments();
     console.log(database)
 

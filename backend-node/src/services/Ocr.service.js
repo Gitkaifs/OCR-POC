@@ -1,7 +1,4 @@
-
-// const Tesseract = require("tesseract.js");
 import Tesseract from "tesseract.js";
-// const fs = require("fs").promises;
 import fs from 'fs/promises';
 
 /**

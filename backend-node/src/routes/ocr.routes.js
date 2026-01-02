@@ -24,7 +24,7 @@ router.get('/result/:jobId', getResult);
 
 /**
  * API 4: Get all documents from database and give back to user
- * GET /api/alltext
+ * GET /api/getall
  */
 router.get('/getall' , getAll);
 
