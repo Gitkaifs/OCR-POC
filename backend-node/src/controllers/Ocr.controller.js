@@ -1,5 +1,5 @@
 import { v4 as uuidv4 } from 'uuid';
-import { createJob, getJob, updateJobStatus, jobExists } from '../utils/Jobstore.js';
+
 import { processOCR } from '../services/Ocr.service.js';
 import { imgUrlConverter } from '../utils/helpingFunctions.js';
 import { saveDocument , getAllDocuments } from '../services/document.service.js';
@@ -50,110 +50,12 @@ export const uploadImage = async (req, res) => {
   }
 };
 
-/**
- * API 2: Get OCR Status (Polling API)
- * GET /api/status/:jobId
- */
-export const getStatus = (req, res) => {
-  try {
-    const { jobId } = req.params;
 
-    // Check if job exists
-    if (!jobExists(jobId)) {
-      return res.status(404).json({
-        error: 'Job not found'
-      });
-    }
-
-    // Get job from store
-    const job = getJob(jobId);
-
-    // Return status based on job state
-    if (job.status === 'rejected') {
-      return res.status(200).json({
-        status: 'rejected',
-        error: job.error || 'Image is unreadable or invalid'
-      });
-    }
-
-    // Return current status (pending, processing, or done)
-    return res.status(200).json({
-      status: job.status
-    });
-
-  } catch (error) {
-    return res.status(500).json({
-      error: 'Failed to get status',
-      details: error.message
-    });
-  }
-};
 
 /**
- * API 3: Get OCR Result (Final Output)
- * GET /api/result/:jobId
+ * API 2: Get all documents from database and send to client
+ * GET /api/getall
  */
-export const getResult = (req, res) => {
-  try {
-    const { jobId } = req.params;
-
-    // Check if job exists
-    if (!jobExists(jobId)) {
-      return res.status(404).json({
-        error: 'Job not found'
-      });
-    }
-
-    // Get job from store
-    const job = getJob(jobId);
-
-    // Check if OCR is completed
-    if (job.status !== 'done') {
-      return res.status(200).json({
-        message: 'OCR not completed yet'
-      });
-    }
-
-    // Return extracted text
-    return res.status(200).json({
-      jobId,
-      text: job.extractedText
-    });
-
-  } catch (error) {
-    return res.status(500).json({
-      error: 'Failed to get result',
-      details: error.message
-    });
-  }
-};
-
-/**
- * Helper function to process image asynchronously
- * This runs in the background and updates job status
- */
-const processImageAsync = async (jobId, imagePath) => {
-  try {
-    // Update status to processing
-    updateJobStatus(jobId, 'processing');
-
-    // Call OCR service (implemented by colleague)
-    const extractedText = await processOCR(imagePath);
-
-    // Update status to done with extracted text
-    updateJobStatus(jobId, 'done', {
-      extractedText
-    });
-
-  } catch (error) {
-    // Update status to rejected on error
-    updateJobStatus(jobId, 'rejected', {
-      error: error.message || 'Image is unreadable or invalid'
-    });
-  }
-};
-
-
 export const getAll = async (req , res) => {
   try{
  
