@@ -1,6 +1,6 @@
 import { v4 as uuidv4 } from 'uuid';
-import { createJob, getJob, updateJobStatus, jobExists } from '../utils/jobStore.js';
-import { processOCR } from '../services/ocr.service.js';
+import { createJob, getJob, updateJobStatus, jobExists } from '../utils/Jobstore.js';
+import { processOCR } from '../services/Ocr.service.js';
 import { imgUrlConverter } from '../utils/helpingFunctions.js';
 import { saveDocument , getAllDocuments } from '../services/document.service.js';
 

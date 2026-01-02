@@ -1,6 +1,6 @@
 import express from 'express';
 import { upload } from '../middlewares/multer.middleware.js';
-import { uploadImage, getStatus, getResult , getAll } from '../controllers/ocr.controller.js';
+import { uploadImage, getStatus, getResult , getAll } from '../controllers/Ocr.controller.js';
 
 const router = express.Router();
 
