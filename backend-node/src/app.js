@@ -4,8 +4,9 @@ import ocrRoutes from './routes/ocr.routes.js';
 
 const app = express();
 
-// Static
-app.use("/api/uploads", express.static("uploads"));
+// Static 
+app.use("/api/uploads", express.static("uploads")); // added for images...
+app.use("/api/outputs", express.static("outputs")); // added for csv data..
 
 
 // Middleware
