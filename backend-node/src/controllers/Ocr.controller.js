@@ -1,78 +1,76 @@
-import { v4 as uuidv4 } from 'uuid';
-
 import { processOCR } from '../services/Ocr.service.js';
 import { imgUrlConverter } from '../utils/helpingFunctions.js';
-import { saveDocument , getAllDocuments } from '../services/document.service.js';
+import { saveDocument, getAllDocuments } from '../services/document.service.js';
+import fs from 'fs/promises';
+import path from 'path';
 
-// ----------------------------
-
-let extractedText ;
-let imagePath ;
-
-
-
-// --------------------------------
-
-/**
- * API 1: Upload Image (Create OCR Job)
- * POST /api/upload
- */
 export const uploadImage = async (req, res) => {
   try {
-    // Check if file was uploaded
     if (!req.file) {
       return res.status(400).json({
         error: 'No image file provided'
       });
     }
 
- 
-    imagePath = req.file.path ;
+    const imagePath = req.file.path;
+    const extractedData = await processOCR(imagePath);
 
-    // Extracting text using OCR funtion
-    extractedText = await processOCR(imagePath);
-    
+    // Create outputs folder
+    const outputDir = 'outputs';
+    await fs.mkdir(outputDir, { recursive: true });
 
-    // Save data in database.
-    await saveDocument(imgUrlConverter(imagePath) , extractedText);
- 
+    // Get base filename without extension
+    const baseName = path.parse(req.file.filename).name;
+
+    // Save CSV file
+    const csvPath = path.join(outputDir, `${baseName}.csv`);
+    await fs.writeFile(csvPath, extractedData.csvData);
+
+    // Save JSON file
+    const jsonPath = path.join(outputDir, `${baseName}.json`);
+    await fs.writeFile(jsonPath, JSON.stringify(extractedData, null, 2));
+
+    // Save to database with file paths
+    await saveDocument(
+      imgUrlConverter(imagePath),
+      extractedData,
+      `/outputs/${baseName}.csv`,
+      `/outputs/${baseName}.json`
+    );
 
     return res.status(200).json({
-  
-      message: 'Image uploaded successfully.'
+      message: 'Image processed successfully',
+      data: {
+        text: extractedData.text,
+        tables: extractedData.tables,
+        confidence: extractedData.confidence,
+        tableCount: extractedData.tableCount,
+        csvPath: `/api/outputs/${baseName}.csv`,
+        jsonPath: `/api/outputs/${baseName}.json`,
+        imagePath: `/api${imgUrlConverter(imagePath)}`
+      }
     });
 
   } catch (error) {
     return res.status(500).json({
-      error: 'Failed to upload image',
+      error: 'Failed to process image',
       details: error.message
     });
   }
 };
 
-
-
-/**
- * API 2: Get all documents from database and send to client
- * GET /api/getall
- */
-export const getAll = async (req , res) => {
-  try{
- 
-    let database = await getAllDocuments();
-    console.log(database)
+export const getAll = async (req, res) => {
+  try {
+    const database = await getAllDocuments();
 
     res.status(200).json({
-      allData : database , 
-      message : "All data fetched from DB."
-    })
-
-  }
-  catch(err){
+      allData: database,
+      message: "All data fetched from DB."
+    });
+  } catch (err) {
     res.status(404).json({
-      message : "Data not found.",
-      errorMsg : err.message
-    })
-
+      message: "Data not found.",
+      errorMsg: err.message
+    });
   }
-}
+};
