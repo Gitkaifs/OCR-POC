@@ -10,3 +10,6 @@ package-lock.json
 *.png
 test-ocr.js
 .env
+
+credentials/*
+outputs/*

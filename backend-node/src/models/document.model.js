@@ -2,29 +2,42 @@ import mongoose from 'mongoose';
 
 const documentSchema = new mongoose.Schema(
   {
-    // Path of image stored in local uploads folder
     imagePath: {
       type: String,
       required: true
     },
-
-    // Final cleaned OCR text (for quick access / listing)
+    csvPath: {
+      type: String,
+      default: ''
+    },
+    jsonPath: {
+      type: String,
+      default: ''
+    },
     extractedText: {
       type: String,
       default: ''
     },
-
-    // File metadata
+    tables: {
+      type: Array,
+      default: []
+    },
+    csvData: {
+      type: String,
+      default: ''
+    },
+    confidence: {
+      type: Number,
+      default: 0
+    },
+    tableCount: {
+      type: Number,
+      default: 0
+    },
     meta: {
-      originalFileName: {
-        type: String
-      },
-      fileSize: {
-        type: Number
-      },
-      mimeType: {
-        type: String
-      }
+      originalFileName: String,
+      fileSize: Number,
+      mimeType: String
     }
   },
   {
