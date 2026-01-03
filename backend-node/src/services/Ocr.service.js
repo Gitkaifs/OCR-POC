@@ -1,26 +1,30 @@
-import Tesseract from "tesseract.js";
-import fs from 'fs/promises';
+import { processDocumentAI } from './documentAI.service.js';
+import { convertAllTablesToCSV, structureTableData } from '../utils/tableParser.js';
 
 /**
- * Process image and extract text
+ * Process image and extract text and tables
  * @param {string} imagePath - Path to the uploaded image file
- * @returns {Promise<string>} - Extracted text from the image
+ * @returns {Promise<Object>} - Extracted data
  */
 export const processOCR = async (imagePath) => {
   try {
-    await fs.access(imagePath);
-
-    const result = await Tesseract.recognize(
-      imagePath,
-      "eng",
-      {
-        logger: () => {}, // disable logs
-        tessedit_pageseg_mode: 6,
-        preserve_interword_spaces: 1
-      }
+    const result = await processDocumentAI(imagePath);
+    
+    // Convert tables to CSV
+    const csvData = convertAllTablesToCSV(result.tables);
+    
+    // Structure tables as JSON
+    const structuredTables = result.tables.map(table => 
+      structureTableData(table)
     );
 
-    return result.data.text; // Return the extracted text
+    return {
+      text: result.text,
+      tables: structuredTables,
+      csvData: csvData,
+      confidence: result.confidence,
+      tableCount: result.tables.length
+    };
   } catch (error) {
     console.error("OCR Error:", error.message);
     throw new Error("OCR_FAILED");

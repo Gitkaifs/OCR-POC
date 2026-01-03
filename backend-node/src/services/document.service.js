@@ -59,7 +59,7 @@ export const processDocument = async ({
  */
 export const getAllDocuments = async () => {
   return Document.find()
-    .select('imagePath extractedText createdAt')
+    .select('imagePath csvPath jsonPath extractedText confidence tableCount createdAt')
     .sort({ createdAt: -1 });
 };
 
@@ -79,10 +79,16 @@ export const getDocumentById = async (documentId) => {
 };
 
 
-export const saveDocument = async ( imagePath, extractedText ) => {
+export const saveDocument = async (imagePath, extractedData, csvPath, jsonPath) => {
   const document = await Document.create({
     imagePath,
-    extractedText
+    csvPath,
+    jsonPath,
+    extractedText: extractedData.text,
+    tables: extractedData.tables,
+    csvData: extractedData.csvData,
+    confidence: extractedData.confidence,
+    tableCount: extractedData.tableCount
   });
 
   return document;
