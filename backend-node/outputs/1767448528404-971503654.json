@@ -1,0 +1,64 @@
+{
+  "text": "No Description of work\nNo Length Preadth Height Quantity Remarks\n1\nWall\nC1 Wall\n1 30 80 24.00\nPlaster, Toilet\n(2\n2 30\n80 48.00\n2\n12040\n25\n1\n1030 3.6\nC3 Water Proofing\n40\n56:0\n3 20\n995\n240 16 10.99\n",
+  "tables": [
+    [
+      {
+        "No Description of work": 1,
+        "No": 1,
+        "Length": 30,
+        "Preadth": 80,
+        "Height": 24,
+        "Quantity": "",
+        "Remarks": ""
+      },
+      {
+        "No Description of work": "Plaster, Toilet (2 2",
+        "No": 2,
+        "Length": 30,
+        "Preadth": 80,
+        "Height": 48,
+        "Quantity": "",
+        "Remarks": ""
+      },
+      {
+        "No Description of work": "",
+        "No": "",
+        "Length": 12040,
+        "Preadth": "",
+        "Height": 25,
+        "Quantity": "",
+        "Remarks": ""
+      },
+      {
+        "No Description of work": "",
+        "No": 1,
+        "Length": 1030,
+        "Preadth": "",
+        "Height": 3.6,
+        "Quantity": "",
+        "Remarks": ""
+      },
+      {
+        "No Description of work": "C3 Water Proofing",
+        "No": 3,
+        "Length": 20,
+        "Preadth": 40,
+        "Height": 56,
+        "Quantity": "",
+        "Remarks": ""
+      },
+      {
+        "No Description of work": "",
+        "No": "",
+        "Length": 240,
+        "Preadth": 16,
+        "Height": 10.99,
+        "Quantity": "",
+        "Remarks": ""
+      }
+    ]
+  ],
+  "csvData": "Table 1\nNo Description of work,No,Length,Preadth,Height,Quantity,Remarks\n\"1\nWall\nC1 Wall\",1,30,80,24.00,,\n\"Plaster, Toilet\n(2\n2\",2,30,80,48.00,,\n,,12040,,25,,\n,1,1030,,3.6,,\nC3 Water Proofing,3,20,\"40\n995\",56:0,,\n,,240,16,10.99,,",
+  "confidence": 0.7662513209016699,
+  "tableCount": 1
+}

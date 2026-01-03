@@ -13,3 +13,8 @@ test-ocr.js
 
 credentials/*
 outputs/*
+
+# for sample data
+!outputs/1767448528404-971503654.csv
+!outputs/1767448528404-971503654.json
+!uploads/1767448528404-971503654.jpg
