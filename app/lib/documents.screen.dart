@@ -31,10 +31,10 @@ class DocumentsScreen extends StatelessWidget {
                     IconButton(
                       icon: const Icon(
                         Icons.arrow_back,
-                        color: Color.fromARGB(255, 19, 10, 10),
+                        color: Colors.white,
                       ),
                       onPressed: () => Navigator.of(context).pushReplacement(
-                        MaterialPageRoute(builder: (context) => HomeScreen()),
+                        MaterialPageRoute(builder: (_) => HomeScreen()),
                       ),
                     ),
                     const SizedBox(width: 8),
@@ -53,23 +53,31 @@ class DocumentsScreen extends StatelessWidget {
                 child: FutureBuilder<List<Document>>(
                   future: OcrApi.getAll(),
                   builder: (context, snapshot) {
-                    if (!snapshot.hasData) {
+                    // if (!snapshot.hasData) {
+                    //   return const Center(
+                    //     child: CircularProgressIndicator(color: Colors.white),
+                    //   );
+                    // }
+                    if (snapshot.connectionState == ConnectionState.waiting) {
                       return const Center(
                         child: CircularProgressIndicator(color: Colors.white),
                       );
                     }
 
-                    final docs = snapshot.data!;
-                    if (docs.isEmpty) {
+                    if (snapshot.hasError || !snapshot.hasData || snapshot.data == null || snapshot.data!.isEmpty) {
                       return _EmptyState();
                     }
+
+                    final docs = snapshot.data!;
+                    // if (docs.isEmpty) {
+                    //   return _EmptyState();
+                    // }
 
                     return ListView.builder(
                       padding: const EdgeInsets.symmetric(horizontal: 16),
                       itemCount: docs.length,
                       itemBuilder: (context, index) {
-                        final doc = docs[index];
-                        return _DocumentCard(doc: doc);
+                        return _DocumentCard(doc: docs[index]);
                       },
                     );
                   },
@@ -103,43 +111,55 @@ class _DocumentCard extends StatelessWidget {
           borderRadius: BorderRadius.circular(20),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withAlpha(30),
-              blurRadius: 16,
+              color: Colors.black.withAlpha(28),
+              blurRadius: 14,
               offset: const Offset(0, 8),
             ),
           ],
         ),
         child: Row(
           children: [
+            /// 🖼 Image preview
             ClipRRect(
               borderRadius: const BorderRadius.horizontal(
                 left: Radius.circular(20),
               ),
               child: Image.network(
-                OcrApi.getImgUrl(doc.imageUrl),
-                width: 90,
-                height: 100,
+                "${OcrApi.baseUrl}/${doc.imageUrl}",
+                width: 110,
+                height: 110,
                 fit: BoxFit.cover,
-                errorBuilder: (context, error, stackTrace) {
-                  // to-do (shimmer)
-                  return CircularProgressIndicator();
-                },
+                errorBuilder: (_, _, _) => const SizedBox(
+                  width: 110,
+                  height: 110,
+                  child: Center(child: CircularProgressIndicator()),
+                ),
               ),
             ),
 
+            /// 📊 Metadata
             Expanded(
               child: Padding(
-                padding: const EdgeInsets.all(14),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 14,
+                  vertical: 16,
+                ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
+                  children: const [
                     Text(
-                      doc.text,
-                      maxLines: 3,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w500,
+                      'Excel Document',
+                      style: TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    SizedBox(height: 6),
+                    Text(
+                      'Tap to view spreadsheet',
+                      style: TextStyle(
+                        fontSize: 13,
+                        color: Colors.black54,
                       ),
                     ),
                   ],
@@ -148,10 +168,10 @@ class _DocumentCard extends StatelessWidget {
             ),
 
             const Padding(
-              padding: EdgeInsets.only(right: 12),
+              padding: EdgeInsets.only(right: 14),
               child: Icon(
-                Icons.arrow_forward_ios,
-                size: 16,
+                Icons.table_chart_outlined,
+                size: 22,
                 color: Colors.grey,
               ),
             ),
@@ -160,11 +180,6 @@ class _DocumentCard extends StatelessWidget {
       ),
     );
   }
-
-  // String _formatDate(String iso) {
-  //   final d = DateTime.parse(iso);
-  //   return '${d.day}/${d.month}/${d.year}';
-  // }
 }
 
 class _EmptyState extends StatelessWidget {

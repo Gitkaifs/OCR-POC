@@ -7,13 +7,14 @@ import 'package:http_parser/http_parser.dart';
 import 'package:mime/mime.dart';
 
 class OcrApi {
-  static const String baseUrl = 'http://192.168.1.53:4000/api';
+  static const String baseUrl = 'http://192.168.4.97:3000/api';
   static final http.Client _client = http.Client();
 
+  // unchanged
   static Future<void> upload(File image) async {
     final mimeType = lookupMimeType(image.path) ?? 'application/octet-stream';
-
     final parts = mimeType.split('/');
+
     final mediaType = parts.length == 2
         ? MediaType(parts[0], parts[1])
         : MediaType('application', 'octet-stream');
@@ -41,43 +42,36 @@ class OcrApi {
       final response = await _client
           .get(Uri.parse("$baseUrl/getall"))
           .timeout(const Duration(seconds: 10));
-      var values = List.from(
+
+      final values = List.from(
         jsonDecode(response.body)['allData'] as Iterable<dynamic>,
       );
-      return values.map((e) {
-        return Document.fromMap(e);
-      }).toList();
-    } catch (e) {
+
+      return values.map((e) => Document.fromMap(e)).toList();
+    } catch (_) {
       return <Document>[];
     }
   }
 
-  static String getImgUrl(String str) {
-    return "$baseUrl/$str";
+
+  // ✅ FIX: download CSV as bytes, then decode
+  static Future<String> fetchCsvFromDownloadUrl(String csvPath) async {
+    final response = await _client.get(Uri.parse("$baseUrl$csvPath"));
+
+    if (response.statusCode != 200) {
+      throw Exception('Failed to download CSV');
+    }
+    // critical line
+    return utf8.decode(response.bodyBytes);
   }
-  // static Future<String> status(String jobId) async {
-  //   try {
-  //     final response = await _client
-  //         .get(Uri.parse('$baseUrl/api/status/$jobId'))
-  //         .timeout(const Duration(seconds: 10));
 
-  //     return jsonDecode(response.body)['status'];
-  //   } catch (e) {
-  //     print(e);
-  //     return "COMPLETED";
-  //   }
-  // }
+  static Future<List<int>> downloadExcelBytes(String excelPath) async {
+    final response = await _client.get(Uri.parse("$baseUrl$excelPath"));
 
-  // static Future<String> result(String jobId) async {
-  //   try {
-  //     final response = await _client
-  //         .get(Uri.parse('$baseUrl/api/result/$jobId'))
-  //         .timeout(const Duration(seconds: 10));
+    if (response.statusCode != 200) {
+      throw Exception('Failed to download Excel');
+    }
 
-  //     return jsonDecode(response.body)['text'];
-  //   } catch (e) {
-  //     print(e);
-  //     return "";
-  //   }
-  // }
+    return response.bodyBytes;
+  }
 }

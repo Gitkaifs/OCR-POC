@@ -2,8 +2,6 @@ import 'dart:async';
 import 'dart:io';
 import 'package:cunning_document_scanner/cunning_document_scanner.dart';
 import 'package:flutter/material.dart';
-import 'package:path_provider/path_provider.dart';
-import 'package:uuid/uuid.dart';
 
 import 'api.dart';
 import 'documents.screen.dart';

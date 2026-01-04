@@ -1,7 +1,6 @@
 import 'package:app/documents.screen.dart';
 import 'package:app/scan_document.dart';
 import 'package:flutter/material.dart';
-import 'camera_screen.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});

@@ -1,9 +1,11 @@
+import 'package:app/notification_helper.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'home_screen.dart';
 
-void main() {
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await NotificationHelper.init();
   runApp(
     AnnotatedRegion<SystemUiOverlayStyle>(
       value: const SystemUiOverlayStyle(
