@@ -41,13 +41,7 @@ export const uploadImage = async (req, res) => {
     return res.status(200).json({
       message: 'Image processed successfully',
       data: {
-        text: extractedData.text,
-        tables: extractedData.tables,
         confidence: extractedData.confidence,
-        tableCount: extractedData.tableCount,
-        csvPath: `/api/outputs/${baseName}.csv`,
-        jsonPath: `/api/outputs/${baseName}.json`,
-        imagePath: `/api${imgUrlConverter(imagePath)}`
       }
     });
 
