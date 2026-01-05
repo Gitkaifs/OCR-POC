@@ -6,7 +6,7 @@ const documentSchema = new mongoose.Schema(
       type: String,
       required: true
     },
-    csvPath: {
+    excelPath: {
       type: String,
       default: ''
     },
@@ -21,10 +21,6 @@ const documentSchema = new mongoose.Schema(
     tables: {
       type: Array,
       default: []
-    },
-    csvData: {
-      type: String,
-      default: ''
     },
     confidence: {
       type: Number,
