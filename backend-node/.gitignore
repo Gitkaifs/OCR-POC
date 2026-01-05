@@ -12,6 +12,7 @@ test-ocr.js
 .env
 
 credentials/*
+!credentials/.gitkeep
 outputs/*
 
 # for sample data
