@@ -1,9 +1,9 @@
 # only for android
-/macos/
-/windows/
-/web/
-/linux/
-/ios/
+/macos/*
+/windows/*
+/web/*
+/linux/*
+/ios/*
 
 # Miscellaneous
 *.class
