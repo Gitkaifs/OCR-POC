@@ -1,6 +1,5 @@
 import Document from '../models/document.model.js';
-// import DocumentContent from '../models/documentContent.model.js';
-import {processOCR} from './Ocr.service.js';
+import { processOCR } from './Ocr.service.js';
 
 /**
  * Main OCR flow
@@ -14,10 +13,9 @@ export const processDocument = async ({
   mimeType
 }) => {
 
-  // 1. Create document entry (NO image binary)
   const document = await Document.create({
     imagePath,
-    status: 'PROCESSING', // temporary internal state
+    status: 'PROCESSING',
     meta: {
       originalFileName,
       fileSize,
@@ -26,17 +24,8 @@ export const processDocument = async ({
   });
 
   try {
-    // 2. Run OCR using local image
     const { rawText, cleanedText } = await processOCR(imagePath);
 
-    // 3. Save OCR content
-    await DocumentContent.create({
-      documentId: document._id,
-      rawText,
-      cleanedText
-    });
-
-    // 4. Update document status
     document.extractedText = cleanedText;
     document.status = 'SUCCESS';
     await document.save();
@@ -47,7 +36,6 @@ export const processDocument = async ({
     };
 
   } catch (error) {
-    // 5. Failure case
     document.status = 'FAILURE';
     await document.save();
     throw error;
@@ -59,7 +47,7 @@ export const processDocument = async ({
  */
 export const getAllDocuments = async () => {
   return Document.find()
-    .select('imagePath csvPath jsonPath extractedText confidence tableCount createdAt')
+    .select('imagePath excelPath jsonPath extractedText confidence tableCount createdAt')
     .sort({ createdAt: -1 });
 };
 
@@ -70,23 +58,21 @@ export const getDocumentById = async (documentId) => {
   const document = await Document.findById(documentId);
   if (!document) return null;
 
-  const content = await DocumentContent.findOne({ documentId });
-
   return {
-    document,
-    content
+    document
   };
 };
 
-
-export const saveDocument = async (imagePath, extractedData, csvPath, jsonPath) => {
+/**
+ * Save document with Excel path
+ */
+export const saveDocument = async (imagePath, extractedData, excelPath, jsonPath) => {
   const document = await Document.create({
     imagePath,
-    csvPath,
+    excelPath,
     jsonPath,
     extractedText: extractedData.text,
     tables: extractedData.tables,
-    csvData: extractedData.csvData,
     confidence: extractedData.confidence,
     tableCount: extractedData.tableCount
   });
