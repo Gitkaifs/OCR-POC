@@ -1,12 +1,14 @@
 import 'dart:io';
 import 'package:app/api.dart';
 import 'package:flutter/material.dart';
-import 'package:permission_handler/permission_handler.dart';
+import 'package:media_store_plus/media_store_plus.dart' hide Document;
+import 'package:path_provider/path_provider.dart';
 import 'package:excel/excel.dart';
 import 'models.dart';
 import 'notification_helper.dart';
 
 Excel csvToExcel(String csv) {
+  if (csv.isEmpty) return Excel.createExcel();
   final excel = Excel.createExcel();
   final sheet = excel.sheets.values.first;
 
@@ -56,6 +58,7 @@ class DocumentDetails extends StatelessWidget {
                     /// 🖼 Zoomable image preview
                     Container(
                       height: 260,
+                      width: double.infinity,
                       decoration: BoxDecoration(
                         color: Colors.white,
                         borderRadius: BorderRadius.circular(24),
@@ -105,6 +108,7 @@ class DocumentDetails extends StatelessWidget {
                         return _CsvTable(table: table);
                       },
                     ),
+                    SizedBox(height: 24),
                   ],
                 ),
               ),
@@ -124,6 +128,7 @@ class DocumentDetails extends StatelessWidget {
   }
 
   List<List<String>> _parseAndNormalizeCsv(String csv) {
+    if (csv.isEmpty) return [[]];
     final rawRows = csv
         .split('\n')
         .where((l) => l.trim().isNotEmpty)
@@ -152,10 +157,26 @@ class _CsvTable extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    if (table.isEmpty || table[0].isEmpty) {
+      return Container(
+        alignment: Alignment.topCenter,
+        padding: const EdgeInsets.only(top: 48),
+        constraints: BoxConstraints(minHeight: 500),
+        child: Expanded(
+          child: Text(
+            "No Excel Preview",
+            style: Theme.of(
+              context,
+            ).textTheme.bodyLarge?.copyWith(color: Colors.white54),
+          ),
+        ),
+      );
+    }
     final headers = table.first;
     final rows = table.skip(1);
 
     return Container(
+      constraints: BoxConstraints(minHeight: 500),
       width: double.infinity,
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
@@ -193,30 +214,38 @@ class _TopBar extends StatelessWidget {
         _CircleButton(
           icon: Icons.download,
           onTap: () async {
-            final status = await Permission.storage.request();
-            if (!status.isGranted) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Storage permission denied')),
-              );
-              return;
-            }
-
             try {
+              // 1️⃣ Fetch CSV
               final csv = await OcrApi.fetchCsvFromDownloadUrl(doc.csvUrl);
+
+              // 2️⃣ Convert to Excel
               final excel = csvToExcel(csv);
               final bytes = excel.encode();
+              if (bytes == null) throw Exception('Excel encode failed');
 
-              if (bytes == null) throw Exception();
+              // 3️⃣ Write to temp file (allowed, no permission)
+              final tempDir = await getTemporaryDirectory();
+              final tempFile = File(
+                '${tempDir.path}/document_${DateTime.now().millisecondsSinceEpoch}.xlsx',
+              );
+              await tempFile.writeAsBytes(bytes, flush: true);
 
-              final file = File(
-                '/storage/emulated/0/Download/document_${DateTime.now().millisecondsSinceEpoch}.xlsx',
+              final saveInfo = await MediaStore().saveFile(
+                tempFilePath: tempFile.path,
+                dirType: DirType.download,
+                dirName: DirName.download,
+                relativePath: 'Image2EXCEL',
               );
 
-              await file.writeAsBytes(bytes, flush: true);
+              if (saveInfo == null) {
+                throw Exception('MediaStore save failed');
+              }
 
-              // 🔔 show notification instead of snackbar
-              await NotificationHelper.showDownloadComplete(file.path);
-            } catch (_) {
+              // 5️⃣ Notify user with CONTENT URI
+              await NotificationHelper.showDownloadComplete(
+                saveInfo.uri.toString(),
+              );
+            } catch (e) {
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(content: Text('Excel conversion failed')),
               );

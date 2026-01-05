@@ -33,11 +33,10 @@ class _ScanDocumentScreenState extends State<ScanDocumentScreen> {
         _goHome();
         return;
       }
-      imageFile = File(scannedImages.first);
+      imageFile = File(scannedImages.last);
 
       setState(() => _status = 'Uploading for OCR…');
       await OcrApi.upload(imageFile!);
-
       if (!mounted) return;
       setState(() => _status = 'Almost done');
       Timer(
@@ -49,7 +48,6 @@ class _ScanDocumentScreenState extends State<ScanDocumentScreen> {
         ),
       );
     } catch (e) {
-      setState(() => _status = "Failed, ${e.toString()}");
       Timer(Duration(milliseconds: 100), () => _goHome());
     }
   }

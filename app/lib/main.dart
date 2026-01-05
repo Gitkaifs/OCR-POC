@@ -1,11 +1,14 @@
 import 'package:app/notification_helper.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:media_store_plus/media_store_plus.dart';
 import 'home_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await NotificationHelper.init();
+  await MediaStore.ensureInitialized();
+  MediaStore.appFolder = 'OCR';
   runApp(
     AnnotatedRegion<SystemUiOverlayStyle>(
       value: const SystemUiOverlayStyle(

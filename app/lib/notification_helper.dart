@@ -1,5 +1,8 @@
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
-import 'package:open_filex/open_filex.dart';
+import 'package:android_intent_plus/android_intent.dart';
+import 'package:android_intent_plus/flag.dart';
+import 'dart:io';
+import 'package:permission_handler/permission_handler.dart';
 
 class NotificationHelper {
   static final _plugin = FlutterLocalNotificationsPlugin();
@@ -11,15 +14,35 @@ class NotificationHelper {
     await _plugin.initialize(
       settings,
       onDidReceiveNotificationResponse: (response) {
-        final path = response.payload;
-        if (path != null) {
-          OpenFilex.open(path);
+        final uri = response.payload;
+        if (uri != null) {
+          _openUri(uri);
         }
       },
     );
   }
 
-  static Future<void> showDownloadComplete(String filePath) async {
+  static void _openUri(String uri) {
+    final intent = AndroidIntent(
+      action: 'android.intent.action.VIEW',
+      data: uri,
+      type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      flags: <int>[
+        Flag.FLAG_GRANT_READ_URI_PERMISSION,
+        Flag.FLAG_ACTIVITY_NEW_TASK,
+      ],
+    );
+
+    intent.launch();
+  }
+
+  static Future<void> showDownloadComplete(String uri) async {
+    if (Platform.isAndroid) {
+      final status = await Permission.notification.status;
+      if (!status.isGranted) {
+        await Permission.notification.request();
+      }
+    }
     const androidDetails = AndroidNotificationDetails(
       'downloads',
       'Downloads',
@@ -28,15 +51,14 @@ class NotificationHelper {
       priority: Priority.high,
     );
 
-    const notificationDetails =
-        NotificationDetails(android: androidDetails);
+    const notificationDetails = NotificationDetails(android: androidDetails);
 
     await _plugin.show(
       DateTime.now().millisecondsSinceEpoch ~/ 1000,
       'Excel downloaded',
       'Tap to open file',
       notificationDetails,
-      payload: filePath,
+      payload: uri, // 👈 content URI, not path
     );
   }
 }
