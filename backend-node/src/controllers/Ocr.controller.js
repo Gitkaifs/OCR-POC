@@ -13,8 +13,7 @@ export const uploadImage = async (req, res) => {
     }
 
     const imagePath = req.file.path;
-    const extractedData = await processOCR(imagePath);
-
+    
     // Create outputs folder
     const outputDir = 'outputs';
     await fs.mkdir(outputDir, { recursive: true });
@@ -22,9 +21,11 @@ export const uploadImage = async (req, res) => {
     // Get base filename without extension
     const baseName = path.parse(req.file.filename).name;
 
-    // Save CSV file
-    const csvPath = path.join(outputDir, `${baseName}.csv`);
-    await fs.writeFile(csvPath, extractedData.csvData);
+    // Define Excel output path
+    const excelPath = path.join(outputDir, `${baseName}.xlsx`);
+
+    // Process OCR and generate Excel
+    const extractedData = await processOCR(imagePath, excelPath);
 
     // Save JSON file
     const jsonPath = path.join(outputDir, `${baseName}.json`);
@@ -34,7 +35,7 @@ export const uploadImage = async (req, res) => {
     await saveDocument(
       imgUrlConverter(imagePath),
       extractedData,
-      `/outputs/${baseName}.csv`,
+      `/outputs/${baseName}.xlsx`,
       `/outputs/${baseName}.json`
     );
 
@@ -42,6 +43,9 @@ export const uploadImage = async (req, res) => {
       message: 'Image processed successfully',
       data: {
         confidence: extractedData.confidence,
+        tableCount: extractedData.tableCount,
+        excelPath: `/api/outputs/${baseName}.xlsx`,
+        jsonPath: `/api/outputs/${baseName}.json`
       }
     });
 
