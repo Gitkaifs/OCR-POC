@@ -1,17 +1,19 @@
 import { processDocumentAI } from './documentAI.service.js';
-import { convertAllTablesToCSV, structureTableData } from '../utils/tableParser.js';
+import { structureTableData } from '../utils/tableParser.js';
+import { convertTablesToExcel } from '../utils/excelParser.js';
 
 /**
  * Process image and extract text and tables
  * @param {string} imagePath - Path to the uploaded image file
+ * @param {string} excelOutputPath - Path to save the Excel file
  * @returns {Promise<Object>} - Extracted data
  */
-export const processOCR = async (imagePath) => {
+export const processOCR = async (imagePath, excelOutputPath) => {
   try {
     const result = await processDocumentAI(imagePath);
     
-    // Convert tables to CSV
-    const csvData = convertAllTablesToCSV(result.tables);
+    // Convert tables to Excel
+    await convertTablesToExcel(result.tables, excelOutputPath);
     
     // Structure tables as JSON
     const structuredTables = result.tables.map(table => 
@@ -21,7 +23,6 @@ export const processOCR = async (imagePath) => {
     return {
       text: result.text,
       tables: structuredTables,
-      csvData: csvData,
       confidence: result.confidence,
       tableCount: result.tables.length
     };
