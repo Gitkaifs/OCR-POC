@@ -6,7 +6,7 @@ const documentSchema = new mongoose.Schema(
       type: String,
       required: true
     },
-    csvPath: {
+    excelPath: {
       type: String,
       default: ''
     },
@@ -22,10 +22,7 @@ const documentSchema = new mongoose.Schema(
       type: Array,
       default: []
     },
-    csvData: {
-      type: String,
-      default: ''
-    },
+    // Excel file will be stored on disk, only path is stored in DB
     confidence: {
       type: Number,
       default: 0

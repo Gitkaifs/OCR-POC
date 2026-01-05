@@ -79,16 +79,15 @@ export const getDocumentById = async (documentId) => {
 };
 
 
-export const saveDocument = async (imagePath, extractedData, csvPath, jsonPath) => {
+export const saveDocument = async (imagePath, extractedData, excelPath, jsonPath) => {
   const document = await Document.create({
     imagePath,
-    csvPath,
+    excelPath,
     jsonPath,
     extractedText: extractedData.text,
     tables: extractedData.tables,
-    csvData: extractedData.csvData,
     confidence: extractedData.confidence,
-    tableCount: extractedData.tableCount
+    tableCount: extractedData.tables?.length || 0
   });
 
   return document;
