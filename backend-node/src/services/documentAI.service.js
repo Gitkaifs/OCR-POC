@@ -1,18 +1,16 @@
 import dotenv from 'dotenv';
 dotenv.config();
 
-import { DocumentProcessorServiceClient } from '@google-cloud/documentai';
+import Anthropic from '@anthropic-ai/sdk';
 import fs from 'fs/promises';
 import path from 'path';
 
-const client = new DocumentProcessorServiceClient({
-  keyFilename: process.env.GOOGLE_APPLICATION_CREDENTIALS
+const client = new Anthropic({
+  apiKey: process.env.ANTHROPIC_API_KEY
 });
 
-const processorName = `projects/${process.env.PROJECT_ID}/locations/${process.env.LOCATION}/processors/${process.env.PROCESSOR_ID}`;
-
 /**
- * Process image using Google Document AI
+ * Process image using Claude Vision API (replaces Google Document AI)
  * @param {string} imagePath - Path to the uploaded image
  * @returns {Promise<Object>} - Extracted text and tables
  */
@@ -28,26 +26,86 @@ export const processDocumentAI = async (imagePath) => {
       '.png': 'image/png',
       '.jpg': 'image/jpeg',
       '.jpeg': 'image/jpeg',
-      '.pdf': 'application/pdf'
+      '.webp': 'image/webp',
+      '.gif': 'image/gif'
     };
-    const mimeType = mimeTypeMap[ext] || 'image/png';
+    const mimeType = mimeTypeMap[ext] || 'image/jpeg';
 
-    const request = {
-      name: processorName,
-      rawDocument: {
-        content: encodedImage,
-        mimeType: mimeType,
-      },
-    };
+    const message = await client.messages.create({
+      model: 'claude-sonnet-4-20250514',
+      max_tokens: 4000,
+      messages: [{
+        role: 'user',
+        content: [
+          {
+            type: 'image',
+            source: {
+              type: 'base64',
+              media_type: mimeType,
+              data: encodedImage
+            }
+          },
+          {
+            type: 'text',
+           text: `Extract this construction measurement form table into JSON.
 
-    const [result] = await client.processDocument(request);
-    const { document } = result;
+STRICT RULES:
+1. FIRST ROW MUST BE HEADERS (even if not clearly visible):
+   ["No.", "Description of work or Material", "No.", "Length", "Breadth", "Height", "Quantity", "Remarks"]
 
+2. Extract all data rows with exactly 8 columns:
+   - Column 1 (No.): Only A-Z letters or numbers (e.g., "A", "B", "1", "2")
+   - Column 2 (Description): Any construction-related text
+   - Column 3 (No.): Only numbers are 1 or -1
+   - Column 4 (Length): Only numbers with feet-inch format (e.g., "6-4", "3.5") or decimals
+   - Column 5 (Breadth): Only numbers with feet-inch format or decimals
+   - Column 6 (Height): Only numbers with feet-inch format or decimals
+   - Column 7 (Quantity): Only decimal numbers, can be negative (e.g., "308.808", "-4.812")
+   - Column 8 (Remarks): Any text
+
+3. Data spanning any 2 columns - should be placed in LEFT column between those 2
+4. If text doesn't match column rules - use empty string ""
+5. Unreadable text - use empty string ""
+6. English language only
+
+Format: {"tables": [{"rows": [
+  ["No.", "Description of work or Material", "No.", "Length", "Breadth", "Height", "Quantity", "Remarks"],
+  [data_row_1],
+  [data_row_2],
+  ...
+]}]}
+
+Return ONLY valid JSON.`
+          }
+        ]
+      }]
+    });
+
+    // Parse Claude response
+    const responseText = message.content[0].text;
+    let jsonData;
+    
+    try {
+      // Remove markdown code blocks if present
+      const jsonMatch = responseText.match(/```json\s*([\s\S]*?)\s*```/) || 
+                       responseText.match(/```\s*([\s\S]*?)\s*```/);
+      
+      const jsonStr = jsonMatch ? jsonMatch[1] : responseText;
+      jsonData = JSON.parse(jsonStr.trim());
+    } catch (error) {
+      console.error('Failed to parse Claude response:', responseText);
+      throw new Error('CLAUDE_PARSE_FAILED');
+    }
+
+    // Transform to existing format
+    const tables = extractTables(jsonData);
+    
     return {
-      text: document.text || '',
-      tables: extractTables(document),
-      confidence: calculateConfidence(document)
+      text: '', // Claude focuses on structured data
+      tables: tables,
+      confidence: 0.85 // Claude doesn't provide confidence scores
     };
+
   } catch (error) {
     console.error('Document AI Error:', error.message);
     throw new Error('DOCUMENT_AI_FAILED');
@@ -55,85 +113,15 @@ export const processDocumentAI = async (imagePath) => {
 };
 
 /**
- * Extract tables from document
+ * Extract tables from Claude JSON response
  */
-function extractTables(document) {
-  if (!document.pages || document.pages.length === 0) return [];
-
-  const tables = [];
-  
-  for (const page of document.pages) {
-    if (!page.tables) continue;
-
-    for (const table of page.tables) {
-      const tableData = {
-        rows: [],
-        confidence: table.layout?.confidence || 0
-      };
-
-      // Extract header rows
-      if (table.headerRows) {
-        for (const row of table.headerRows) {
-          const rowData = row.cells.map(cell => 
-            getText(cell.layout, document.text)
-          );
-          tableData.rows.push(rowData);
-        }
-      }
-
-      // Extract body rows
-      if (table.bodyRows) {
-        for (const row of table.bodyRows) {
-          const rowData = row.cells.map(cell => 
-            getText(cell.layout, document.text)
-          );
-          tableData.rows.push(rowData);
-        }
-      }
-
-      tables.push(tableData);
-    }
+function extractTables(jsonData) {
+  if (!jsonData.tables || jsonData.tables.length === 0) {
+    return [];
   }
 
-  return tables;
-}
-
-/**
- * Get text from layout
- */
-function getText(layout, fullText) {
-  if (!layout || !layout.textAnchor) return '';
-  
-  const textSegments = layout.textAnchor.textSegments || [];
-  return textSegments
-    .map(segment => {
-      const startIndex = parseInt(segment.startIndex) || 0;
-      const endIndex = parseInt(segment.endIndex) || fullText.length;
-      return fullText.substring(startIndex, endIndex);
-    })
-    .join('')
-    .trim();
-}
-
-/**
- * Calculate overall confidence score
- */
-function calculateConfidence(document) {
-  if (!document.pages || document.pages.length === 0) return 0;
-  
-  let totalConfidence = 0;
-  let count = 0;
-
-  for (const page of document.pages) {
-    if (page.blocks) {
-      for (const block of page.blocks) {
-        if (block.layout?.confidence) {
-          totalConfidence += block.layout.confidence;
-          count++;
-        }
-      }
-    }
-  }
-
-  return count > 0 ? (totalConfidence / count) : 0;
+  return jsonData.tables.map(table => ({
+    rows: table.rows || [],
+    confidence: 0.85
+  }));
 }
