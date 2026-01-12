@@ -1,14 +1,11 @@
 class Document {
   final String imageUrl;
-  final String csvUrl;
+  final String excelLink;
 
-  Document({
-    required this.imageUrl,
-    required this.csvUrl,
-  });
+  Document({required this.imageUrl, required this.excelLink});
 
   static Document fromMap(Map<String, dynamic> map) => Document(
-        imageUrl: map['imagePath'].toString(),
-        csvUrl: map['csvPath'].toString(),
-      );
+    imageUrl: map['imagePath'].toString(),
+    excelLink: map['excelPath'].toString(),
+  );
 }

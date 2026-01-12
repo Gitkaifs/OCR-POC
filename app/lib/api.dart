@@ -6,8 +6,9 @@ import 'package:http/http.dart' as http;
 import 'package:http_parser/http_parser.dart';
 import 'package:mime/mime.dart';
 
+// 8000/api/ocr/processes
 class OcrApi {
-  static const String baseUrl = 'http://192.168.1.53:3000/api';
+  static const String baseUrl = 'http://192.168.1.21:3000/api';
   static final http.Client _client = http.Client();
 
   // unchanged
@@ -52,24 +53,13 @@ class OcrApi {
     }
   }
 
-  // ✅ FIX: download CSV as bytes, then decode
-  static Future<String> fetchCsvFromDownloadUrl(String csvPath) async {
-    final response = await _client.get(Uri.parse("$baseUrl$csvPath"));
+  static Future<List<int>> fetchExcelFromDownloadUrl(String excelPath) async {
+    final response = await _client.get(Uri.parse("$baseUrl$excelPath"));
+    print(response.bodyBytes);
 
     if (response.statusCode != 200) {
       throw Exception('Failed to download CSV');
     }
-    // critical line
-    return utf8.decode(response.bodyBytes);
-  }
-
-  static Future<List<int>> downloadExcelBytes(String excelPath) async {
-    final response = await _client.get(Uri.parse("$baseUrl$excelPath"));
-
-    if (response.statusCode != 200) {
-      throw Exception('Failed to download Excel');
-    }
-
     return response.bodyBytes;
   }
 }

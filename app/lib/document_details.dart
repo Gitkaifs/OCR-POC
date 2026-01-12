@@ -89,21 +89,31 @@ class DocumentDetails extends StatelessWidget {
                     const SizedBox(height: 24),
 
                     /// 📊 CSV / Excel preview
-                    FutureBuilder<String>(
-                      future: OcrApi.fetchCsvFromDownloadUrl(doc.csvUrl),
+                    FutureBuilder<List<int>>(
+                      future: OcrApi.fetchExcelFromDownloadUrl(doc.excelLink),
                       builder: (context, snapshot) {
-                        if (!snapshot.hasData) {
-                          return const Center(
-                            child: Padding(
-                              padding: EdgeInsets.all(32),
-                              child: CircularProgressIndicator(
-                                color: Colors.white,
-                              ),
-                            ),
+                        if (snapshot.connectionState ==
+                            ConnectionState.waiting) {
+                          return const CircularProgressIndicator();
+                        }
+
+                        if (snapshot.hasError) {
+                          return Text(
+                            'Error: ${snapshot.error}',
+                            style: const TextStyle(color: Colors.red),
                           );
                         }
 
-                        final table = _parseAndNormalizeCsv(snapshot.data!);
+                        final excel = Excel.decodeBytes(snapshot.data!);
+                        final sheet = excel.sheets.values.first;
+
+                        final table = sheet.rows
+                            .map(
+                              (r) => r
+                                  .map((c) => c?.value?.toString() ?? '')
+                                  .toList(),
+                            )
+                            .toList();
 
                         return _CsvTable(table: table);
                       },
@@ -192,13 +202,7 @@ class _TopBar extends StatelessWidget {
           icon: Icons.download,
           onTap: () async {
             try {
-              // 1️⃣ Fetch CSV
-              final csv = await OcrApi.fetchCsvFromDownloadUrl(doc.csvUrl);
-
-              // 2️⃣ Convert to Excel
-              final excel = csvToExcel(csv);
-              final bytes = excel.encode();
-              if (bytes == null) throw Exception('Excel encode failed');
+              var bytes = await OcrApi.fetchExcelFromDownloadUrl(doc.excelLink);
 
               // 3️⃣ Write to temp file (allowed, no permission)
               final tempDir = await getTemporaryDirectory();
