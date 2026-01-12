@@ -126,29 +126,6 @@ class DocumentDetails extends StatelessWidget {
       ),
     );
   }
-
-  List<List<String>> _parseAndNormalizeCsv(String csv) {
-    if (csv.isEmpty) return [[]];
-    final rawRows = csv
-        .split('\n')
-        .where((l) => l.trim().isNotEmpty)
-        .map((l) => l.split(','))
-        .toList();
-
-    final maxCols = rawRows
-        .map((r) => r.length)
-        .reduce((a, b) => a > b ? a : b);
-
-    return rawRows.map((row) {
-      if (row.length < maxCols) {
-        return [...row, ...List.filled(maxCols - row.length, '')];
-      }
-      if (row.length > maxCols) {
-        return row.sublist(0, maxCols);
-      }
-      return row;
-    }).toList();
-  }
 }
 
 class _CsvTable extends StatelessWidget {
