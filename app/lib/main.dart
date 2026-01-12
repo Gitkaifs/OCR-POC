@@ -1,8 +1,8 @@
+import 'package:app/api_setup_screen.dart';
 import 'package:app/notification_helper.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:media_store_plus/media_store_plus.dart';
-import 'home_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -29,7 +29,7 @@ class MyApp extends StatelessWidget {
       title: 'OCR App',
       theme: ThemeData(useMaterial3: true),
       themeMode: ThemeMode.dark,
-      home: const HomeScreen(),
+      home: const ApiSetupScreen(),
       debugShowCheckedModeBanner: false,
     );
   }

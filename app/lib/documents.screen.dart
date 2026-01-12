@@ -29,10 +29,7 @@ class DocumentsScreen extends StatelessWidget {
                 child: Row(
                   children: [
                     IconButton(
-                      icon: const Icon(
-                        Icons.arrow_back,
-                        color: Colors.white,
-                      ),
+                      icon: const Icon(Icons.arrow_back, color: Colors.white),
                       onPressed: () => Navigator.of(context).pushReplacement(
                         MaterialPageRoute(builder: (_) => HomeScreen()),
                       ),
@@ -64,7 +61,10 @@ class DocumentsScreen extends StatelessWidget {
                       );
                     }
 
-                    if (snapshot.hasError || !snapshot.hasData || snapshot.data == null || snapshot.data!.isEmpty) {
+                    if (snapshot.hasError ||
+                        !snapshot.hasData ||
+                        snapshot.data == null ||
+                        snapshot.data!.isEmpty) {
                       return _EmptyState();
                     }
 
@@ -124,16 +124,25 @@ class _DocumentCard extends StatelessWidget {
               borderRadius: const BorderRadius.horizontal(
                 left: Radius.circular(20),
               ),
-              child: Image.network(
-                "${OcrApi.baseUrl}/${doc.imageUrl}",
-                width: 110,
-                height: 110,
-                fit: BoxFit.cover,
-                errorBuilder: (_, _, _) => const SizedBox(
-                  width: 110,
-                  height: 110,
-                  child: Center(child: CircularProgressIndicator()),
-                ),
+              child: FutureBuilder<String>(
+                future: OcrApi.getImageUrl(doc.imageUrl),
+                builder: (context, snapshot) {
+                  if (!snapshot.hasData) {
+                    return const SizedBox(
+                      width: 110,
+                      height: 110,
+                      child: Center(child: CircularProgressIndicator()),
+                    );
+                  }
+
+                  return Image.network(
+                    snapshot.data!,
+                    width: 110,
+                    height: 110,
+                    fit: BoxFit.cover,
+                    errorBuilder: (_, _, _) => const Icon(Icons.broken_image),
+                  );
+                },
               ),
             ),
 
@@ -157,10 +166,7 @@ class _DocumentCard extends StatelessWidget {
                     SizedBox(height: 6),
                     Text(
                       'Tap to view spreadsheet',
-                      style: TextStyle(
-                        fontSize: 13,
-                        color: Colors.black54,
-                      ),
+                      style: TextStyle(fontSize: 13, color: Colors.black54),
                     ),
                   ],
                 ),

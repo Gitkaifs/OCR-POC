@@ -6,13 +6,14 @@ import 'package:http/http.dart' as http;
 import 'package:http_parser/http_parser.dart';
 import 'package:mime/mime.dart';
 
-// 8000/api/ocr/processes
+import 'api_config.dart';
+
 class OcrApi {
-  static const String baseUrl = 'http://192.168.1.21:3000/api';
   static final http.Client _client = http.Client();
 
-  // unchanged
   static Future<void> upload(File image) async {
+    final baseUrl = await ApiConfig.getBaseUrl();
+
     final mimeType = lookupMimeType(image.path) ?? 'application/octet-stream';
     final parts = mimeType.split('/');
 
@@ -32,6 +33,7 @@ class OcrApi {
 
     final streamedResponse = await _client.send(request);
     final response = await http.Response.fromStream(streamedResponse);
+
     if (response.statusCode != 200) {
       throw Exception(response.body);
     }
@@ -39,9 +41,11 @@ class OcrApi {
 
   static Future<List<Document>> getAll() async {
     try {
+      final baseUrl = await ApiConfig.getBaseUrl();
+
       final response = await _client
-          .get(Uri.parse("$baseUrl/getall"))
-          .timeout(const Duration(seconds: 10));
+          .get(Uri.parse('$baseUrl/getall'))
+          .timeout(const Duration(seconds: 30));
 
       final values = List.from(
         jsonDecode(response.body)['allData'] as Iterable<dynamic>,
@@ -54,12 +58,19 @@ class OcrApi {
   }
 
   static Future<List<int>> fetchExcelFromDownloadUrl(String excelPath) async {
-    final response = await _client.get(Uri.parse("$baseUrl$excelPath"));
-    print(response.bodyBytes);
+    final baseUrl = await ApiConfig.getBaseUrl();
+
+    final response = await _client.get(Uri.parse('$baseUrl$excelPath'));
 
     if (response.statusCode != 200) {
       throw Exception('Failed to download CSV');
     }
+
     return response.bodyBytes;
+  }
+
+  static Future<String> getImageUrl(String imagePath) async {
+    final baseUrl = await ApiConfig.getBaseUrl();
+    return '$baseUrl/$imagePath';
   }
 }

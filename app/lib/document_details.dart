@@ -75,12 +75,23 @@ class DocumentDetails extends StatelessWidget {
                         child: InteractiveViewer(
                           minScale: 1,
                           maxScale: 4,
-                          child: Image.network(
-                            "${OcrApi.baseUrl}/${doc.imageUrl}",
-                            fit: BoxFit.cover,
-                            errorBuilder: (_, _, _) => const Center(
-                              child: CircularProgressIndicator(),
-                            ),
+                          child: FutureBuilder<String>(
+                            future: OcrApi.getImageUrl(doc.imageUrl),
+                            builder: (context, snapshot) {
+                              if (!snapshot.hasData) {
+                                return const Center(
+                                  child: CircularProgressIndicator(),
+                                );
+                              }
+
+                              return Image.network(
+                                snapshot.data!,
+                                fit: BoxFit.cover,
+                                errorBuilder: (_, _, _) => const Center(
+                                  child: Icon(Icons.broken_image),
+                                ),
+                              );
+                            },
                           ),
                         ),
                       ),
